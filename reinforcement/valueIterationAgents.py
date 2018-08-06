@@ -189,4 +189,43 @@ class PrioritizedSweepingValueIterationAgent(AsynchronousValueIterationAgent):
 
     def runValueIteration(self):
         "*** YOUR CODE HERE ***"
+        #initialize the dictionary with key as states and values as predecessors states
+        predecessors = {}
+        for state in self.mdp.getStates():
+            predecessors[state] = set([])
+ 
+        #fill in the predecessors values
+        for state in self.mdp.getStates():
+            if not self.mdp.isTerminal(state):
+                for action in self.mdp.getPossibleActions(state):
+                    for state_, prob in self.mdp.getTransitionStatesAndProbs(state,action):
+                        predecessors[state_].add(state)
+
+        #initializing a priority queue
+        priorityQueue = util.PriorityQueue()
+        for state in self.mdp.getStates():
+            if not self.mdp.isTerminal(state):
+                maxQValue = None;
+                for action in self.mdp.getPossibleActions(state):
+                    if maxQValue < self.computeQValueFromValues(state,action):    #TODO: check whether to handle Q values
+                        maxQValue = self.computeQValueFromValues(state,action)
+                diff = abs(maxQValue - self.values[state])
+                priorityQueue.push(state, -diff)
+
+        for i in range(self.iterations):
+            if not priorityQueue.isEmpty():
+                state = priorityQueue.pop()
+                if not self.mdp.isTerminal(state):
+                    maxQValue = None
+                    for action in self.mdp.getPossibleActions(state):
+                        if maxQValue < self.computeQValueFromValues(state, action):    #TODO: check whether to handle Q values
+                            maxQValue = self.computeQValueFromValues(state, action)
+                    self.values[state] = maxQValue
+                for p in predecessors[state]:
+                    maxQValue = None;
+                    for action in self.mdp.getPossibleActions(p):
+                        if maxQValue < self.computeQValueFromValues(p,action):    #TODO: check whether to handle Q values
+                            maxQValue = self.computeQValueFromValues(p,action)
+                    diff = abs(maxQValue - self.values[p])
+                    priorityQueue.update(p, -diff)
 
