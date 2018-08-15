@@ -144,6 +144,7 @@ class ExactInference(InferenceModule):
              of None will be returned if, and only if, the ghost is
              captured).
         """
+        #q1
         noisyDistance = observation
         emissionModel = busters.getObservationDistribution(noisyDistance)
         pacmanPosition = gameState.getPacmanPosition()
@@ -219,7 +220,13 @@ class ExactInference(InferenceModule):
         positions after a time update from a particular position.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        #q2
+        newPosDist = self.beliefs
+        finalPoseDist = util.Counter()
+        for oldPos, prob in self.beliefs.items():
+            for newPos, prob_ in self.getPositionDistribution(self.setGhostPosition(gameState, oldPos)).items():
+                finalPoseDist[newPos] += prob_ * prob
+        self.beliefs = finalPoseDist
 
     def getBeliefDistribution(self):
         return self.beliefs
