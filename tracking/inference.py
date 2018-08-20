@@ -221,7 +221,7 @@ class ExactInference(InferenceModule):
         """
         "*** YOUR CODE HERE ***"
         #q2
-        newPosDist = self.beliefs
+        #newPosDist = self.beliefs
         finalPoseDist = util.Counter()
         for oldPos, prob in self.beliefs.items():
             for newPos, prob_ in self.getPositionDistribution(self.setGhostPosition(gameState, oldPos)).items():
