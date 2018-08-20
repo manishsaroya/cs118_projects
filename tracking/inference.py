@@ -354,7 +354,18 @@ class ParticleFilter(InferenceModule):
         a belief distribution.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        # variable to store the motion Update
+        finalPoseDist = util.Counter()
+        for oldPos, prob in self.beliefs.items():
+            for newPos, prob_ in self.getPositionDistribution(self.setGhostPosition(gameState, oldPos)).items():
+                finalPoseDist[newPos] += prob_ * prob
+        self.beliefs = finalPoseDist
+        
+        # Update the particle cloud using current belief
+        particles_ = []
+        for i in range(self.numParticles):
+            particles_.insert(len(particles_),util.sample(self.beliefs))
+        self.particles = particles_
 
     def getBeliefDistribution(self):
         """
