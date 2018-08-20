@@ -247,7 +247,6 @@ class ParticleFilter(InferenceModule):
     def setNumParticles(self, numParticles):
         self.numParticles = numParticles
 
-
     def initializeUniformly(self, gameState):
         """
         Initializes a list of particles. Use self.numParticles for the number of
@@ -261,6 +260,22 @@ class ParticleFilter(InferenceModule):
         weight with each position) is incorrect and may produce errors.
         """
         "*** YOUR CODE HERE ***"
+        #q4
+        # initialize the particle set 
+        self.particles = []
+        # copy the legalPositions list
+        legalPositions_ = self.legalPositions[:]
+        #Define p
+        p = random.choice(legalPositions_)
+        # Evenly distribe the particle set
+        for i in range(self.numParticles):
+            try:
+                p = random.choice(legalPositions_)
+            except IndexError:
+                legalPositions_ = self.legalPositions[:]
+                p = random.choice(legalPositions_)
+            self.particles.insert(len(self.particles),p)
+            legalPositions_.remove(p)
 
     def observe(self, observation, gameState):
         """
@@ -293,7 +308,37 @@ class ParticleFilter(InferenceModule):
         emissionModel = busters.getObservationDistribution(noisyDistance)
         pacmanPosition = gameState.getPacmanPosition()
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        # variable to store the sensor update belief 
+        allPossible = util.Counter()
+        
+        """
+        Use positions aquired by the particles as the legalPositions space can be
+        really big. The main idea of the particle filter is to reduce the computation
+        in big environment
+        """
+        for p, prob_ in self.beliefs.items():
+            if noisyDistance!=None:
+                positionDistanceFromPacman = util.manhattanDistance(p,pacmanPosition)
+                if emissionModel[positionDistanceFromPacman] > 0:
+                    allPossible[p] = emissionModel[positionDistanceFromPacman] * prob_
+            else:
+                allPossible[self.getJailPosition()] = 1.0
+         
+        # Normalization step
+        allPossible.normalize()
+        
+        # Handling all weight zero case
+        if allPossible.totalCount()==0:
+            self.initializeUniformly(gameState)
+            self.beliefs = self.getBeliefDistribution()
+        else:
+            self.beliefs = allPossible
+
+        # Update the particle cloud using current belief
+        particles_ = []
+        for i in range(self.numParticles):
+            particles_.insert(len(particles_),util.sample(self.beliefs))
+        self.particles = particles_
 
     def elapseTime(self, gameState):
         """
@@ -320,7 +365,10 @@ class ParticleFilter(InferenceModule):
         Counter object)
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        self.beliefs = util.Counter()
+        for p in self.particles:
+            self.beliefs[p] += 1.0/self.numParticles
+        return self.beliefs
 
 class MarginalInference(InferenceModule):
     """
